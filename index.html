@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poké Clicker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes sparkle {
+            0% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0); }
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255,215,0,0.5); }
+            50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); }
+            100% { box-shadow: 0 0 5px rgba(255,215,0,0.5); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .shake {
+            animation: shake 0.3s;
+        }
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        .pokemon-card {
+            transition: all 0.3s;
+        }
+        .pokemon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .critical-hit {
+            position: absolute;
+            color: #ff0000;
+            font-weight: bold;
+            font-size: 24px;
+            animation: float-up 1s forwards;
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff0000, 0 0 20px #ff0000;
+        }
+        @keyframes float-up {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: gold;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 0.5s forwards;
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: confetti-fall 3s linear forwards;
+        }
+        .pokeball-trail {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-image: url('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png');
+            background-size: contain;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+        }
+        .background-pokeballs {
+            position: fixed;
+            opacity: 0.05;
+            z-index: -1;
+            animation: float 15s infinite linear;
+        }
+        .evolve-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            animation: evolve 1.5s forwards;
+            z-index: 10;
+        }
+        @keyframes evolve {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+        .level-up {
+            position: absolute;
+            color: gold;
+            font-weight: bold;
+            font-size: 24px;
+            text-shadow: 0 0 5px #000;
+            animation: level-up 1.5s forwards;
+            z-index: 10;
+        }
+        @keyframes level-up {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        .upgrade-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,240,240,0.9) 100%);
+        }
+        .upgrade-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+        .upgrade-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.8) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        .upgrade-button {
+            position: relative;
+            overflow: hidden;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        .upgrade-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
+            animation: pulse 1s infinite;
+        }
+        .upgrade-button:active {
+            transform: translateY(1px);
+        }
+        .upgrade-button:disabled {
+            background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .upgrade-button .owned-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #f59e0b;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .hexagon {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        .diamond {
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+        .star {
+            clip-path: polygon(
+                50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
+            );
+        }
+        .pokeball-shape {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            overflow: hidden;
+        }
+        .pokeball-shape::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background-color: #ff0000;
+        }
+        .pokeball-shape::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background-color: #ffffff;
+        }
+        .pokeball-shape .center-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #000;
+            z-index: 2;
+        }
+        .pokeball-shape .center-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #000;
+            z-index: 1;
+        }
+        .floating-shapes {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.7;
+            animation: float 10s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans overflow-x-hidden">
+    <!-- Background Poké Balls -->
+    <div id="backgroundPokeballs"></div>
+    
+    <!-- Floating shapes -->
+    <div id="floatingShapes"></div>
+    
+    <!-- Main Game Container -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Floating Poké Ball Counter -->
+        <div class="fixed top-4 right-4 bg-white rounded-full shadow-lg p-3 z-50 flex items-center hover:scale-110 transition-transform">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" 
+                 alt="Poké Ball" class="w-8 h-8 mr-2">
+            <span id="pokeBalls" class="text-xl font-bold text-yellow-500">0</span>
+        </div>
+        
+        <!-- Header -->
+        <div class="text-center mb-8 relative">
+            <h1 class="text-5xl font-bold text-yellow-500 mb-2 drop-shadow-lg">Poké Clicker</h1>
+            <p class="text-gray-600 text-lg">Catch Pokémon to earn Poké Balls and build your team!</p>
+            
+            <!-- Animated Poké Ball -->
+            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" 
+                     alt="Poké Ball" class="w-16 h-16 float">
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Left Column -->
+            <div class="lg:w-2/3">
+                <!-- Main Pokemon Click Area -->
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6 relative overflow-hidden border-4 border-yellow-400">
+                    <div class="absolute inset-0 bg-gradient-to-br from-yellow-100 to-red-100 opacity-20"></div>
+                    
+                    <div class="flex justify-between items-center mb-4 relative z-10">
+                        <h2 class="text-2xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                            <span>Pokémon Encounter</span>
+                        </h2>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-yellow-500" id="pokeBallsCounter">0</div>
+                            <div class="text-sm text-gray-500">Poké Balls</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col items-center relative z-10">
+                        <div id="pokemonDisplay" class="relative cursor-pointer mb-4 group">
+                            <img id="currentPokemon" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" 
+                                 alt="Pikachu" class="w-48 h-48 hover:scale-105 transition-transform group-hover:drop-shadow-lg">
+                            <div id="pokemonLevel" class="absolute bottom-0 right-0 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">Lv.5</div>
+                        </div>
+                        
+                        <button id="catchButton" class="relative overflow-hidden bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105 group">
+                            <i class="fas fa-pokeball mr-2"></i> Catch Pokémon
+                            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                        </button>
+                        
+                        <div class="mt-4 text-gray-600 flex items-center">
+                            <span id="pokemonName" class="font-semibold text-lg">Pikachu</span>
+                            <div id="pokemonType" class="ml-2"></div>
+                            <span class="mx-2">-</span>
+                            <span id="pokemonPoints" class="font-bold text-yellow-500">1</span>
+                            <span class="ml-1">Poké Balls</span>
+                        </div>
+                        
+                        <div class="mt-2 w-full max-w-xs">
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div id="pokemonHp" class="h-full bg-green-500" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 relative z-10">
+                        <h3 class="text-lg font-semibold mb-2 flex items-center">
+                            <i class="fas fa-eye text-blue-500 mr-2"></i>
+                            <span>Pokémon Seen: <span id="pokemonSeen">1</span></span>
+                        </h3>
+                        <div class="progress-bar bg-gradient-to-r from-blue-400 to-blue-600 rounded-full h-2 shadow-inner" id="encounterProgress"></div>
+                    </div>
+                </div>
+                
+                <!-- Upgrades -->
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6 relative overflow-hidden border-4 border-blue-400">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-100 opacity-20"></div>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4 relative z-10 flex items-center">
+                        <i class="fas fa-shopping-bag text-blue-500 mr-2"></i>
+                        <span>Poké Mart Upgrades</span>
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10" id="upgradesContainer">
+                        <!-- Upgrades will be added here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="lg:w-1/3">
+                <!-- Team Display -->
+                <div class="bg-white rounded-xl shadow-xl p-6 mb-6 relative overflow-hidden border-4 border-green-400">
+                    <div class="absolute inset-0 bg-gradient-to-br from-green-100 to-teal-100 opacity-20"></div>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4 relative z-10 flex items-center">
+                        <i class="fas fa-users text-green-500 mr-2"></i>
+                        <span>Your Pokémon Team</span>
+                    </h2>
+                    <div class="grid grid-cols-3 gap-4 relative z-10" id="teamContainer">
+                        <!-- Team slots will be filled by JavaScript -->
+                    </div>
+                    
+                    <div class="mt-4 text-sm text-gray-500 relative z-10">
+                        <i class="fas fa-info-circle text-blue-400 mr-1"></i>
+                        Click on team members to see their stats
+                    </div>
+                </div>
+                
+                <!-- Stats -->
+                <div class="bg-white rounded-xl shadow-xl p-6 relative overflow-hidden border-4 border-purple-400">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100 opacity-20"></div>
+                    
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4 relative z-10 flex items-center">
+                        <i class="fas fa-chart-line text-purple-500 mr-2"></i>
+                        <span>Trainer Stats</span>
+                    </h2>
+                    <div class="space-y-3 relative z-10">
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-coins text-yellow-500 mr-2"></i>
+                                <span class="text-gray-600">Total Poké Balls:</span>
+                            </div>
+                            <span class="font-semibold" id="totalPokeBalls">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-paw text-red-500 mr-2"></i>
+                                <span class="text-gray-600">Pokémon Caught:</span>
+                            </div>
+                            <span class="font-semibold" id="pokemonCaught">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-bullseye text-blue-500 mr-2"></i>
+                                <span class="text-gray-600">Catch Rate:</span>
+                            </div>
+                            <span class="font-semibold" id="catchRate">100%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-bolt text-green-500 mr-2"></i>
+                                <span class="text-gray-600">Poké Balls Per Second:</span>
+                            </div>
+                            <span class="font-semibold" id="pbs">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400 mr-2"></i>
+                                <span class="text-gray-600">Critical Hit Chance:</span>
+                            </div>
+                            <span class="font-semibold" id="criticalChance">5%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-trophy text-orange-500 mr-2"></i>
+                                <span class="text-gray-600">Shiny Pokémon:</span>
+                            </div>
+                            <span class="font-semibold" id="shinyCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Pokémon Details -->
+    <div id="pokemonModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full relative">
+            <button id="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="flex items-center mb-4">
+                <img id="modalPokemonImg" src="" alt="" class="w-20 h-20 mr-4">
+                <div>
+                    <h3 id="modalPokemonName" class="text-2xl font-bold"></h3>
+                    <div id="modalPokemonTypes" class="flex mt-1"></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="bg-gray-100 p-3 rounded-lg">
+                    <div class="text-sm text-gray-500">Level</div>
+                    <div id="modalPokemonLevel" class="font-bold"></div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg">
+                    <div class="text-sm text-gray-500">HP</div>
+                    <div id="modalPokemonHp" class="font-bold"></div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg">
+                    <div class="text-sm text-gray-500">Attack</div>
+                    <div id="modalPokemonAttack" class="font-bold"></div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg">
+                    <div class="text-sm text-gray-500">Defense</div>
+                    <div id="modalPokemonDefense" class="font-bold"></div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="text-sm text-gray-500">Poké Balls Generated</div>
+                <div id="modalPokemonValue" class="font-bold text-yellow-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            pokeBalls: 0,
+            totalPokeBalls: 0,
+            pokemonCaught: 0,
+            pokemonSeen: 1,
+            currentPokemonId: 25, // Pikachu
+            currentPokemonPoints: 1,
+            currentPokemonName: "Pikachu",
+            currentPokemonLevel: 5,
+            currentPokemonHp: 100,
+            currentPokemonMaxHp: 100,
+            currentPokemonTypes: ["electric"],
+            catchRate: 100,
+            criticalChance: 5,
+            pokemonPerSecond: 0,
+            shinyCount: 0,
+            isShiny: false,
+            upgrades: [
+                { id: 1, name: "Great Ball", description: "Increases catch rate by 10%", cost: 50, owned: 0, effect: () => { gameState.catchRate += 10; } },
+                { id: 2, name: "Ultra Ball", description: "Increases catch rate by 20%", cost: 200, owned: 0, effect: () => { gameState.catchRate += 20; } },
+                { id: 3, name: "Master Ball", description: "Guaranteed catch every time", cost: 1000, owned: 0, effect: () => { gameState.catchRate = 100; } },
+                { id: 4, name: "Pokédex", description: "Find Pokémon 20% faster", cost: 100, owned: 0, effect: () => { gameState.encounterSpeed *= 0.8; } },
+                { id: 5, name: "Lucky Egg", description: "5% chance for critical hits (2x Poké Balls)", cost: 150, owned: 0, effect: () => { gameState.criticalChance += 5; } },
+                { id: 6, name: "Exp. Share", description: "Earn 1 Poké Ball per second automatically", cost: 500, owned: 0, effect: () => { gameState.pokemonPerSecond += 1; } },
+                { id: 7, name: "Pikachu", description: "Cute mouse that generates 2 Poké Balls per second", cost: 1000, owned: 0, effect: () => { gameState.pokemonPerSecond += 2; addToTeam(25, "Pikachu", ["electric"]); } },
+                { id: 8, name: "Charmander", description: "Fire lizard that generates 3 Poké Balls per second", cost: 1500, owned: 0, effect: () => { gameState.pokemonPerSecond += 3; addToTeam(4, "Charmander", ["fire"]); } },
+                { id: 9, name: "Squirtle", description: "Tiny turtle that generates 3 Poké Balls per second", cost: 1500, owned: 0, effect: () => { gameState.pokemonPerSecond += 3; addToTeam(7, "Squirtle", ["water"]); } },
+                { id: 10, name: "Bulbasaur", description: "Seed Pokémon that generates 3 Poké Balls per second", cost: 1500, owned: 0, effect: () => { gameState.pokemonPerSecond += 3; addToTeam(1, "Bulbasaur", ["grass", "poison"]); } },
+                { id: 11, name: "Shiny Charm", description: "Increases shiny encounter rate", cost: 5000, owned: 0, effect: () => { gameState.shinyRate *= 0.5; } },
+            ],
+            encounterSpeed: 5000, // ms between encounters
+            encounterTimer: null,
+            autoSaveInterval: null,
+            autoPokeballInterval: null,
+            team: [],
+            shinyRate: 0.01, // 1% chance for shiny
+            backgroundPokeballs: [],
+            floatingShapes: []
+        };
+
+        // DOM Elements
+        const pokeBallsElement = document.getElementById('pokeBalls');
+        const pokeBallsCounterElement = document.getElementById('pokeBallsCounter');
+        const currentPokemonElement = document.getElementById('currentPokemon');
+        const pokemonNameElement = document.getElementById('pokemonName');
+        const pokemonPointsElement = document.getElementById('pokemonPoints');
+        const pokemonSeenElement = document.getElementById('pokemonSeen');
+        const pokemonCaughtElement = document.getElementById('pokemonCaught');
+        const totalPokeBallsElement = document.getElementById('totalPokeBalls');
+        const catchRateElement = document.getElementById('catchRate');
+        const pbsElement = document.getElementById('pbs');
+        const criticalChanceElement = document.getElementById('criticalChance');
+        const shinyCountElement = document.getElementById('shinyCount');
+        const encounterProgressElement = document.getElementById('encounterProgress');
+        const upgradesContainer = document.getElementById('upgradesContainer');
+        const teamContainer = document.getElementById('teamContainer');
+        const catchButton = document.getElementById('catchButton');
+        const pokemonDisplay = document.getElementById('pokemonDisplay');
+        const pokemonHpElement = document.getElementById('pokemonHp');
+        const pokemonLevelElement = document.getElementById('pokemonLevel');
+        const pokemonTypeElement = document.getElementById('pokemonType');
+        const backgroundPokeballsElement = document.getElementById('backgroundPokeballs');
+        const floatingShapesElement = document.getElementById('floatingShapes');
+        const pokemonModal = document.getElementById('pokemonModal');
+        const closeModal = document.getElementById('closeModal');
+        const modalPokemonImg = document.getElementById('modalPokemonImg');
+        const modalPokemonName = document.getElementById('modalPokemonName');
+        const modalPokemonTypes = document.getElementById('modalPokemonTypes');
+        const modalPokemonLevel = document.getElementById('modalPokemonLevel');
+        const modalPokemonHp = document.getElementById('modalPokemonHp');
+        const modalPokemonAttack = document.getElementById('modalPokemonAttack');
+        const modalPokemonDefense = document.getElementById('modalPokemonDefense');
+        const modalPokemonValue = document.getElementById('modalPokemonValue');
+
+        // Type colors
+        const typeColors = {
+            normal: 'bg-gray-400',
+            fire: 'bg-red-500',
+            water: 'bg-blue-500',
+            electric: 'bg-yellow-400',
+            grass: 'bg-green-500',
+            ice: 'bg-blue-200',
+            fighting: 'bg-red-700',
+            poison: 'bg-purple-500',
+            ground: 'bg-yellow-600',
+            flying: 'bg-indigo-300',
+            psychic: 'bg-pink-500',
+            bug: 'bg-green-400',
+            rock: 'bg-yellow-700',
+            ghost: 'bg-purple-700',
+            dragon: 'bg-indigo-600',
+            dark: 'bg-gray-800',
+            steel: 'bg-gray-500',
+            fairy: 'bg-pink-300'
+        };
+
+        // Initialize the game
+        function initGame() {
+            loadGame();
+            renderUpgrades();
+            startEncounterTimer();
+            startAutoSave();
+            startAutoPokeballs();
+            updateStats();
+            createBackgroundPokeballs();
+            createFloatingShapes();
+            
+            // Add event listeners
+            catchButton.addEventListener('click', catchPokemon);
+            currentPokemonElement.addEventListener('click', catchPokemon);
+            closeModal.addEventListener('click', () => {
+                pokemonModal.classList.add('hidden');
+            });
+            
+            // Add mouse trail effect
+            document.addEventListener('mousemove', (e) => {
+                if (Math.random() < 0.3) {
+                    createPokeballTrail(e.clientX, e.clientY);
+                }
+            });
+            
+            // Add sparkle effect on click
+            document.addEventListener('click', (e) => {
+                createSparkle(e.clientX, e.clientY);
+            });
+        }
+
+        // Create floating shapes in the background
+        function createFloatingShapes() {
+            const shapes = ['hexagon', 'diamond', 'star', 'pokeball-shape'];
+            const colors = ['bg-red-400', 'bg-blue-400', 'bg-yellow-400', 'bg-green-400', 'bg-purple-400'];
+            
+            for (let i = 0; i < 15; i++) {
+                const shape = document.createElement('div');
+                const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                shape.className = `floating-shapes ${shapeType} ${color} w-8 h-8`;
+                
+                // Random position
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                shape.style.left = `${x}%`;
+                shape.style.top = `${y}%`;
+                
+                // Random animation duration and delay
+                const duration = 8 + Math.random() * 12;
+                shape.style.animationDuration = `${duration}s`;
+                shape.style.animationDelay = `-${Math.random() * duration}s`;
+                
+                // Special styling for pokeball shape
+                if (shapeType === 'pokeball-shape') {
+                    shape.innerHTML = `
+                        <div class="center-line"></div>
+                        <div class="center-button"></div>
+                    `;
+                }
+                
+                floatingShapesElement.appendChild(shape);
+                gameState.floatingShapes.push(shape);
+            }
+        }
+
+        // Create background Poké Balls
+        function createBackgroundPokeballs() {
+            for (let i = 0; i < 20; i++) {
+                const pokeball = document.createElement('div');
+                pokeball.className = 'background-pokeballs';
+                pokeball.innerHTML = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-16 h-16">';
+                
+                // Random position
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                pokeball.style.left = `${x}%`;
+                pokeball.style.top = `${y}%`;
+                
+                // Random animation duration
+                const duration = 10 + Math.random() * 20;
+                pokeball.style.animationDuration = `${duration}s`;
+                
+                // Random delay
+                pokeball.style.animationDelay = `-${Math.random() * duration}s`;
+                
+                backgroundPokeballsElement.appendChild(pokeball);
+                gameState.backgroundPokeballs.push(pokeball);
+            }
+        }
+
+        // Create Poké Ball trail effect
+        function createPokeballTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.className = 'pokeball-trail';
+            trail.style.left = `${x}px`;
+            trail.style.top = `${y}px`;
+            
+            document.body.appendChild(trail);
+            
+            setTimeout(() => {
+                trail.style.opacity = '0';
+                trail.style.transform = `translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px) scale(0.5)`;
+                setTimeout(() => {
+                    document.body.removeChild(trail);
+                }, 500);
+            }, 100);
+        }
+
+        // Create sparkle effect
+        function createSparkle(x, y) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = `${x}px`;
+            sparkle.style.top = `${y}px`;
+            
+            document.body.appendChild(sparkle);
+            
+            setTimeout(() => {
+                document.body.removeChild(sparkle);
+            }, 500);
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}%`;
+                
+                // Random shape
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                }
+                
+                // Random size
+                const size = 5 + Math.random() * 10;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    document.body.removeChild(confetti);
+                }, 3000);
+            }
+        }
+
+        // Start the encounter timer
+        function startEncounterTimer() {
+            if (gameState.encounterTimer) clearInterval(gameState.encounterTimer);
+            
+            gameState.encounterTimer = setInterval(() => {
+                changePokemon();
+            }, gameState.encounterSpeed);
+            
+            // Start progress bar animation
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 1;
+                encounterProgressElement.style.width = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    encounterProgressElement.style.width = '0%';
+                }
+            }, gameState.encounterSpeed / 100);
+        }
+
+        // Change the current Pokémon
+        function changePokemon() {
+            // Random Pokémon ID (1-151 for original 151 Pokémon)
+            const randomId = Math.floor(Math.random() * 151) + 1;
+            gameState.currentPokemonId = randomId;
+            
+            // Check for shiny
+            gameState.isShiny = Math.random() < gameState.shinyRate;
+            
+            // Get Pokémon data from PokeAPI
+            fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`)
+                .then(response => response.json())
+                .then(data => {
+                    gameState.currentPokemonName = data.name.charAt(0).toUpperCase() + data.name.slice(1);
+                    gameState.currentPokemonPoints = Math.floor(Math.random() * 5) + 1; // 1-5 Poké Balls
+                    gameState.currentPokemonLevel = Math.floor(Math.random() * 10) + 1; // 1-10
+                    gameState.currentPokemonMaxHp = Math.floor(Math.random() * 50) + 50; // 50-100
+                    gameState.currentPokemonHp = gameState.currentPokemonMaxHp;
+                    
+                    // Get types
+                    gameState.currentPokemonTypes = data.types.map(type => type.type.name);
+                    
+                    // Update UI
+                    const imgUrl = gameState.isShiny 
+                        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${randomId}.png`
+                        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${randomId}.png`;
+                    
+                    currentPokemonElement.src = imgUrl;
+                    pokemonNameElement.textContent = gameState.isShiny ? `✨ ${gameState.currentPokemonName}` : gameState.currentPokemonName;
+                    pokemonPointsElement.textContent = gameState.currentPokemonPoints;
+                    pokemonLevelElement.textContent = `Lv.${gameState.currentPokemonLevel}`;
+                    updateHpBar();
+                    
+                    // Update types
+                    pokemonTypeElement.innerHTML = '';
+                    gameState.currentPokemonTypes.forEach(type => {
+                        const typeBadge = document.createElement('span');
+                        typeBadge.className = `type-badge ${typeColors[type] || 'bg-gray-500'} ml-1`;
+                        typeBadge.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                        pokemonTypeElement.appendChild(typeBadge);
+                    });
+                    
+                    // Increment seen counter
+                    gameState.pokemonSeen++;
+                    pokemonSeenElement.textContent = gameState.pokemonSeen;
+                })
+                .catch(error => {
+                    console.error("Error fetching Pokémon data:", error);
+                    // Fallback to Pikachu if API fails
+                    gameState.currentPokemonId = 25;
+                    gameState.currentPokemonName = "Pikachu";
+                    gameState.currentPokemonPoints = 1;
+                    gameState.currentPokemonLevel = 5;
+                    gameState.currentPokemonMaxHp = 100;
+                    gameState.currentPokemonHp = 100;
+                    gameState.currentPokemonTypes = ["electric"];
+                    currentPokemonElement.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png`;
+                    pokemonNameElement.textContent = "Pikachu";
+                    pokemonPointsElement.textContent = 1;
+                    pokemonLevelElement.textContent = "Lv.5";
+                    updateHpBar();
+                    
+                    // Update types
+                    pokemonTypeElement.innerHTML = '';
+                    const typeBadge = document.createElement('span');
+                    typeBadge.className = `type-badge ${typeColors.electric} ml-1`;
+                    typeBadge.textContent = "Electric";
+                    pokemonTypeElement.appendChild(typeBadge);
+                });
+        }
+
+        // Update HP bar
+        function updateHpBar() {
+            const hpPercent = (gameState.currentPokemonHp / gameState.currentPokemonMaxHp) * 100;
+            pokemonHpElement.style.width = `${hpPercent}%`;
+            
+            // Change color based on HP
+            if (hpPercent < 20) {
+                pokemonHpElement.className = 'h-full bg-red-500';
+            } else if (hpPercent < 50) {
+                pokemonHpElement.className = 'h-full bg-yellow-500';
+            } else {
+                pokemonHpElement.className = 'h-full bg-green-500';
+            }
+        }
+
+        // Catch the current Pokémon
+        function catchPokemon() {
+            // Add shake animation
+            currentPokemonElement.classList.add('shake');
+            setTimeout(() => {
+                currentPokemonElement.classList.remove('shake');
+            }, 300);
+            
+            // Determine if catch is successful
+            const isCritical = Math.random() * 100 < gameState.criticalChance;
+            const isCaught = Math.random() * 100 < gameState.catchRate;
+            
+            if (isCaught) {
+                let ballsEarned = gameState.currentPokemonPoints;
+                
+                // Critical hit doubles Poké Balls
+                if (isCritical) {
+                    ballsEarned *= 2;
+                    showCriticalHit();
+                }
+                
+                // Shiny bonus
+                if (gameState.isShiny) {
+                    ballsEarned *= 3;
+                    gameState.shinyCount++;
+                    shinyCountElement.textContent = gameState.shinyCount;
+                    createConfetti();
+                    
+                    // Show shiny animation
+                    const evolve = document.createElement('div');
+                    evolve.className = 'evolve-animation';
+                    pokemonDisplay.appendChild(evolve);
+                    
+                    setTimeout(() => {
+                        pokemonDisplay.removeChild(evolve);
+                    }, 1500);
+                }
+                
+                gameState.pokeBalls += ballsEarned;
+                gameState.totalPokeBalls += ballsEarned;
+                gameState.pokemonCaught++;
+                
+                // Update UI
+                pokeBallsElement.textContent = gameState.pokeBalls.toLocaleString();
+                pokeBallsCounterElement.textContent = gameState.pokeBalls.toLocaleString();
+                totalPokeBallsElement.textContent = gameState.totalPokeBalls.toLocaleString();
+                pokemonCaughtElement.textContent = gameState.pokemonCaught;
+                
+                // Show success message
+                showFloatingText(`+${ballsEarned}`, 'text-green-500');
+                
+                // Show level up if applicable
+                if (Math.random() < 0.2) {
+                    showLevelUp();
+                }
+                
+                // Immediately change Pokémon after catch
+                clearInterval(gameState.encounterTimer);
+                changePokemon();
+                startEncounterTimer();
+            } else {
+                // Reduce HP on failed catch
+                gameState.currentPokemonHp -= Math.floor(gameState.currentPokemonMaxHp * 0.2);
+                if (gameState.currentPokemonHp <= 0) {
+                    gameState.currentPokemonHp = 0;
+                    // Pokémon fainted, change to new one
+                    clearInterval(gameState.encounterTimer);
+                    changePokemon();
+                    startEncounterTimer();
+                }
+                updateHpBar();
+                
+                // Show fail message
+                showFloatingText('Missed!', 'text-red-500');
+            }
+            
+            updateStats();
+        }
+
+        // Show level up animation
+        function showLevelUp() {
+            const levelUp = document.createElement('div');
+            levelUp.className = 'level-up';
+            levelUp.textContent = 'LEVEL UP!';
+            levelUp.style.left = '50%';
+            levelUp.style.top = '50%';
+            levelUp.style.transform = 'translate(-50%, -50%)';
+            
+            pokemonDisplay.appendChild(levelUp);
+            
+            setTimeout(() => {
+                pokemonDisplay.removeChild(levelUp);
+            }, 1500);
+        }
+
+        // Show floating text for catches/misses
+        function showFloatingText(text, colorClass) {
+            const floatingText = document.createElement('div');
+            floatingText.textContent = text;
+            floatingText.className = `absolute ${colorClass} font-bold text-xl`;
+            floatingText.style.left = `${50 + (Math.random() * 20 - 10)}%`;
+            floatingText.style.top = `${50 + (Math.random() * 20 - 10)}%`;
+            floatingText.style.transform = 'translate(-50%, -50%)';
+            
+            pokemonDisplay.appendChild(floatingText);
+            
+            setTimeout(() => {
+                floatingText.style.transform = 'translate(-50%, -100px)';
+                floatingText.style.opacity = '0';
+                setTimeout(() => {
+                    pokemonDisplay.removeChild(floatingText);
+                }, 1000);
+            }, 0);
+        }
+
+        // Show critical hit effect
+        function showCriticalHit() {
+            const critText = document.createElement('div');
+            critText.className = 'critical-hit';
+            critText.textContent = 'CRITICAL HIT!';
+            critText.style.left = `${Math.random() * 100}%`;
+            critText.style.top = `${Math.random() * 100}%`;
+            
+            pokemonDisplay.appendChild(critText);
+            
+            setTimeout(() => {
+                pokemonDisplay.removeChild(critText);
+            }, 1000);
+        }
+
+        // Render upgrades in the shop
+        function renderUpgrades() {
+            upgradesContainer.innerHTML = '';
+            
+            gameState.upgrades.forEach(upgrade => {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade-card p-4 border border-gray-200';
+                
+                // Determine icon based on upgrade type
+                let icon = '';
+                if (upgrade.name.includes('Ball')) {
+                    icon = '<div class="pokeball-shape w-8 h-8 mr-3"><div class="center-line"></div><div class="center-button"></div></div>';
+                } else if (upgrade.name.includes('Pokédex')) {
+                    icon = '<i class="fas fa-book text-blue-500 text-2xl mr-3"></i>';
+                } else if (upgrade.name.includes('Lucky Egg')) {
+                    icon = '<i class="fas fa-egg text-yellow-500 text-2xl mr-3"></i>';
+                } else if (upgrade.name.includes('Exp. Share')) {
+                    icon = '<i class="fas fa-share-alt text-green-500 text-2xl mr-3"></i>';
+                } else if (['Pikachu', 'Charmander', 'Squirtle', 'Bulbasaur'].includes(upgrade.name)) {
+                    icon = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
+                        upgrade.name === 'Pikachu' ? 25 : 
+                        upgrade.name === 'Charmander' ? 4 : 
+                        upgrade.name === 'Squirtle' ? 7 : 1
+                    }.png" class="w-8 h-8 mr-3">`;
+                } else if (upgrade.name.includes('Shiny Charm')) {
+                    icon = '<i class="fas fa-gem text-yellow-300 text-2xl mr-3"></i>';
+                }
+                
+                upgradeElement.innerHTML = `
+                    <div class="flex items-start mb-3">
+                        ${icon}
+                        <div>
+                            <h3 class="font-semibold text-lg">${upgrade.name}</h3>
+                            <p class="text-sm text-gray-600">${upgrade.description}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-yellow-500 font-bold flex items-center">
+                            <i class="fas fa-coins mr-1"></i>
+                            ${upgrade.cost}
+                        </span>
+                        <button 
+                            class="upgrade-button px-4 py-2 ${gameState.pokeBalls < upgrade.cost ? 'opacity-75 cursor-not-allowed' : ''}"
+                            data-id="${upgrade.id}"
+                            ${gameState.pokeBalls < upgrade.cost ? 'disabled' : ''}>
+                            Buy
+                            ${upgrade.owned > 0 ? `<span class="owned-count">${upgrade.owned}</span>` : ''}
+                        </button>
+                    </div>
+                `;
+                
+                upgradesContainer.appendChild(upgradeElement);
+            });
+            
+            // Add event listeners to buy buttons
+            document.querySelectorAll('.upgrade-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const upgradeId = parseInt(this.getAttribute('data-id'));
+                    buyUpgrade(upgradeId);
+                });
+            });
+        }
+
+        // Buy an upgrade
+        function buyUpgrade(id) {
+            const upgrade = gameState.upgrades.find(u => u.id === id);
+            
+            if (gameState.pokeBalls >= upgrade.cost) {
+                gameState.pokeBalls -= upgrade.cost;
+                upgrade.owned++;
+                upgrade.effect();
+                
+                // Increase cost for next purchase
+                upgrade.cost = Math.floor(upgrade.cost * 1.5);
+                
+                // Play sound effect
+                playSound('buy');
+                
+                // Show sparkles
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        const rect = document.querySelector(`[data-id="${id}"]`).getBoundingClientRect();
+                        createSparkle(
+                            rect.left + Math.random() * rect.width,
+                            rect.top + Math.random() * rect.height
+                        );
+                    }, i * 100);
+                }
+                
+                // Update UI
+                pokeBallsElement.textContent = gameState.pokeBalls.toLocaleString();
+                pokeBallsCounterElement.textContent = gameState.pokeBalls.toLocaleString();
+                renderUpgrades();
+                updateStats();
+                
+                // Special case for auto-generating Pokémon
+                if (id === 6 || id === 7 || id === 8 || id === 9 || id === 10) {
+                    startAutoPokeballs();
+                }
+            }
+        }
+
+        // Add Pokémon to team
+        function addToTeam(pokemonId, pokemonName, types) {
+            if (gameState.team.length >= 6) return;
+            
+            const teamMember = {
+                id: pokemonId,
+                name: pokemonName,
+                types: types,
+                level: Math.floor(Math.random() * 10) + 1,
+                hp: Math.floor(Math.random() * 50) + 50,
+                attack: Math.floor(Math.random() * 20) + 10,
+                defense: Math.floor(Math.random() * 20) + 10,
+                value: pokemonId === 25 ? 2 : 3 // Pikachu gives 2, others give 3
+            };
+            
+            gameState.team.push(teamMember);
+            renderTeam();
+            
+            // Play sound effect
+            playSound('catch');
+        }
+
+        // Render the team
+        function renderTeam() {
+            // Clear existing team
+            teamContainer.innerHTML = '';
+            
+            // Add team members
+            gameState.team.forEach((pokemon, index) => {
+                const teamMember = document.createElement('div');
+                teamMember.className = 'pokemon-card bg-gray-100 rounded-lg p-3 text-center cursor-pointer hover:bg-gray-200 transition-colors';
+                teamMember.innerHTML = `
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png" 
+                         alt="${pokemon.name}" class="w-16 h-16 mx-auto">
+                    <div class="mt-2 text-sm font-semibold">${pokemon.name}</div>
+                    <div class="flex justify-center mt-1">
+                        ${pokemon.types.map(type => `
+                            <span class="type-badge ${typeColors[type] || 'bg-gray-500'} ml-1 text-xs px-2 py-0.5">${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                        `).join('')}
+                    </div>
+                `;
+                
+                // Add click event to show details
+                teamMember.addEventListener('click', () => showPokemonDetails(index));
+                
+                teamContainer.appendChild(teamMember);
+            });
+            
+            // Add empty slots
+            for (let i = gameState.team.length; i < 6; i++) {
+                const emptySlot = document.createElement('div');
+                emptySlot.className = 'pokemon-card bg-gray-100 rounded-lg p-3 text-center';
+                emptySlot.innerHTML = `
+                    <div class="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center text-gray-400">
+                        <i class="fas fa-question text-2xl"></i>
+                    </div>
+                    <div class="mt-2 text-sm">Empty Slot</div>
+                `;
+                teamContainer.appendChild(emptySlot);
+            }
+        }
+
+        // Show Pokémon details in modal
+        function showPokemonDetails(index) {
+            const pokemon = gameState.team[index];
+            
+            modalPokemonImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
+            modalPokemonName.textContent = pokemon.name;
+            modalPokemonLevel.textContent = pokemon.level;
+            modalPokemonHp.textContent = pokemon.hp;
+            modalPokemonAttack.textContent = pokemon.attack;
+            modalPokemonDefense.textContent = pokemon.defense;
+            modalPokemonValue.textContent = `${pokemon.value} Poké Balls per second`;
+            
+            // Clear and add types
+            modalPokemonTypes.innerHTML = '';
+            pokemon.types.forEach(type => {
+                const typeBadge = document.createElement('span');
+                typeBadge.className = `type-badge ${typeColors[type] || 'bg-gray-500'} mr-1`;
+                typeBadge.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                modalPokemonTypes.appendChild(typeBadge);
+            });
+            
+            pokemonModal.classList.remove('hidden');
+        }
+
+        // Update stats display
+        function updateStats() {
+            catchRateElement.textContent = `${Math.min(gameState.catchRate, 100)}%`;
+            criticalChanceElement.textContent = `${gameState.criticalChance}%`;
+            pbsElement.textContent = gameState.pokemonPerSecond;
+        }
+
+        // Auto-generate Poké Balls
+        function startAutoPokeballs() {
+            if (gameState.autoPokeballInterval) clearInterval(gameState.autoPokeballInterval);
+            
+            gameState.autoPokebballInterval = setInterval(() => {
+                if (gameState.pokemonPerSecond > 0) {
+                    gameState.pokeBalls += gameState.pokemonPerSecond;
+                    gameState.totalPokeBalls += gameState.pokemonPerSecond;
+                    pokeBallsElement.textContent = gameState.pokeBalls.toLocaleString();
+                    pokeBallsCounterElement.textContent = gameState.pokeBalls.toLocaleString();
+                    totalPokeBallsElement.textContent = gameState.totalPokeBalls.toLocaleString();
+                    
+                    // Show floating text for auto-generated Poké Balls
+                    if (Math.random() < 0.3) {
+                        const teamMember = document.querySelector('.pokemon-card');
+                        if (teamMember) {
+                            const rect = teamMember.getBoundingClientRect();
+                            showFloatingText(
+                                `+${gameState.pokemonPerSecond}`,
+                                'text-yellow-500',
+                                rect.left + rect.width/2,
+                                rect.top + rect.height/2
+                            );
+                        }
+                    }
+                }
+            }, 1000);
+        }
+
+        // Auto-save game
+        function startAutoSave() {
+            gameState.autoSaveInterval = setInterval(() => {
+                saveGame();
+            }, 30000); // Save every 30 seconds
+        }
+
+        // Play sound effect
+        function playSound(type) {
+            // In a real game, you would play actual sound files here
+            console.log(`Playing ${type} sound`);
+        }
+
+        // Save game to localStorage
+        function saveGame() {
+            const saveData = {
+                pokeBalls: gameState.pokeBalls,
+                totalPokeBalls: gameState.totalPokeBalls,
+                pokemonCaught: gameState.pokemonCaught,
+                pokemonSeen: gameState.pokemonSeen,
+                catchRate: gameState.catchRate,
+                criticalChance: gameState.criticalChance,
+                pokemonPerSecond: gameState.pokemonPerSecond,
+                upgrades: gameState.upgrades,
+                team: gameState.team,
+                shinyCount: gameState.shinyCount
+            };
+            
+            localStorage.setItem('pokeClickerSave', JSON.stringify(saveData));
+        }
+
+        // Load game from localStorage
+        function loadGame() {
+            const saveData = JSON.parse(localStorage.getItem('pokeClickerSave'));
+            
+            if (saveData) {
+                gameState.pokeBalls = saveData.pokeBalls || 0;
+                gameState.totalPokeBalls = saveData.totalPokeBalls || 0;
+                gameState.pokemonCaught = saveData.pokemonCaught || 0;
+                gameState.pokemonSeen = saveData.pokemonSeen || 1;
+                gameState.catchRate = saveData.catchRate || 100;
+                gameState.criticalChance = saveData.criticalChance || 5;
+                gameState.pokemonPerSecond = saveData.pokemonPerSecond || 0;
+                gameState.upgrades = saveData.upgrades || gameState.upgrades;
+                gameState.team = saveData.team || [];
+                gameState.shinyCount = saveData.shinyCount || 0;
+                
+                pokeBallsElement.textContent = gameState.pokeBalls.toLocaleString();
+                pokeBallsCounterElement.textContent = gameState.pokeBalls.toLocaleString();
+                totalPokeBallsElement.textContent = gameState.totalPokeBalls.toLocaleString();
+                pokemonCaughtElement.textContent = gameState.pokemonCaught;
+                pokemonSeenElement.textContent = gameState.pokemonSeen;
+                shinyCountElement.textContent = gameState.shinyCount;
+                
+                renderTeam();
+            }
+        }
+
+        // Initialize the game
+        initGame();
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=mentamarco7ss/pokeclick" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
